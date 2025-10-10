@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import Cover from './components/Cover'
 
 type Book = {
   id: string
@@ -99,7 +100,7 @@ export default function Page() {
           <input
             value={q}
             onChange={e => setQ(e.target.value)}
-            placeholder="예: 유시민, 무라카미, 979..."
+            placeholder="예: 한강, 무라카미 하루키 / 979..."
             style={{ width: '100%', padding: 10, border: '1px solid #ddd', borderRadius: 8 }}
           />
         </div>
@@ -123,28 +124,33 @@ export default function Page() {
 
           return (
             <li key={b.id} style={{ border:'1px solid #eee', borderRadius: 12, padding: 14 }}>
-              <div style={{ display:'flex', justifyContent:'space-between', gap:8 }}>
-                <div>
-                  <div style={{ fontWeight: 700 }}>{b.title}</div>
-                  <div style={{ color:'#555', fontSize: 13 }}>{b.author} · {b.publisher}</div>
-                  <div style={{ color:'#777', fontSize: 12 }}>출간일 {b.pubDate || '-'}</div>
-                </div>
-                <div style={{ fontSize: 12, color:'#666' }}>{b.grade || ''}</div>
-              </div>
+              <div style={{ display:'flex', gap:12 }}>
+                <Cover isbn={b.isbn} alt={b.title} />
+                <div style={{ flex:1 }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', gap:8 }}>
+                    <div>
+                      <div style={{ fontWeight: 700 }}>{b.title}</div>
+                      <div style={{ color:'#555', fontSize: 13 }}>{b.author} · {b.publisher}</div>
+                      <div style={{ color:'#777', fontSize: 12 }}>출간일 {b.pubDate || '-'}</div>
+                    </div>
+                    <div style={{ fontSize: 12, color:'#666' }}>{b.grade || ''}</div>
+                  </div>
 
-              <div style={{ marginTop: 10, display:'flex', gap:10, alignItems:'baseline' }}>
-                <div style={{ fontSize: 16, fontWeight: 700 }}>
-                  {price !== null ? `${fmt(price)}원` : '가격문의'}
-                </div>
-                {(haveSell && haveList) ? (
-                  <div style={{ fontSize:12, color:'#999' }}>정가 {fmt(b.listPrice)}원</div>
-                ) : null}
-              </div>
+                  <div style={{ marginTop: 10, display:'flex', gap:10, alignItems:'baseline' }}>
+                    <div style={{ fontSize: 16, fontWeight: 700 }}>
+                      {price !== null ? `${fmt(price)}원` : '가격문의'}
+                    </div>
+                    {(haveSell && haveList) ? (
+                      <div style={{ fontSize:12, color:'#999' }}>정가 {fmt(b.listPrice)}원</div>
+                    ) : null}
+                  </div>
 
-              <div style={{ marginTop: 6, fontSize: 12, color: '#444' }}>ISBN {b.isbn}</div>
-              <div style={{ marginTop: 8, display:'flex', gap:8 }}>
-                <span style={{ fontSize: 12, padding:'4px 8px', border:'1px solid #eee', borderRadius: 999 }}>재고 {toNumber(b.stock)}권</span>
-                {b.grade && <span style={{ fontSize: 12, padding:'4px 8px', border:'1px solid #eee', borderRadius: 999 }}>{b.grade}</span>}
+                  <div style={{ marginTop: 6, fontSize: 12, color: '#444' }}>ISBN {b.isbn}</div>
+                  <div style={{ marginTop: 8, display:'flex', gap:8 }}>
+                    <span style={{ fontSize: 12, padding:'4px 8px', border:'1px solid #eee', borderRadius: 999 }}>재고 {toNumber(b.stock)}권</span>
+                    {b.grade && <span style={{ fontSize: 12, padding:'4px 8px', border:'1px solid #eee', borderRadius: 999 }}>{b.grade}</span>}
+                  </div>
+                </div>
               </div>
             </li>
           )
