@@ -3,8 +3,7 @@
 import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+export const dynamic = 'force-dynamic' // prevent prerender issues with search params
 
 function SuccessInner() {
   const search = useSearchParams()
@@ -45,9 +44,7 @@ function SuccessInner() {
     else setState({ error: '잘못된 요청입니다.' })
   }, [search, router])
 
-  if (state.loading) {
-    return <main style={{ padding: 24 }}>처리 중...</main>
-  }
+  if (state.loading) return <main style={{ padding: 24 }}>처리 중...</main>
   if (state.error) {
     return <main style={{ padding: 24, color: 'crimson' }}>
       결제 확인 중 오류가 발생했습니다.<br/>사유: {String(state.error)}
