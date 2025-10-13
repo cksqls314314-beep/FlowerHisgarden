@@ -1,14 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 
-function toNumber(v: any) {
-  const n = Number(String(v ?? '').replace(/[^\d.-]/g, ''))
-  return Number.isFinite(n) ? n : 0
-}
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
-export default function SuccessPage() {
+function SuccessInner() {
   const search = useSearchParams()
   const router = useRouter()
   const [state, setState] = useState<any>({ loading: true })
@@ -16,16 +14,19 @@ export default function SuccessPage() {
   useEffect(() => {
     const paymentKey = search.get('paymentKey')
     const orderId = search.get('orderId')
-    const amount = toNumber(search.get('amount'))
-    const items = JSON.parse(localStorage.getItem('hgcc_items') || '[]')
-    const buyer = JSON.parse(localStorage.getItem('hgcc_buyer') || '{}')
+    const amount = Number(search.get('amount') || 0)
 
     const run = async () => {
       try {
         const res = await fetch('/api/payments/toss/confirm', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ paymentKey, orderId, amount, items, buyer }),
+          body: JSON.stringify({
+            paymentKey, orderId, amount,
+            items: JSON.parse(localStorage.getItem('hgcc_items') || '[]'),
+            buyer: JSON.parse(localStorage.getItem('hgcc_buyer') || '{}'),
+          }),
+          cache: 'no-store'
         })
         const json = await res.json()
         if (!res.ok || json.error) {
@@ -41,7 +42,8 @@ export default function SuccessPage() {
     }
 
     if (paymentKey && orderId && amount > 0) run()
-  }, [search])
+    else setState({ error: '잘못된 요청입니다.' })
+  }, [search, router])
 
   if (state.loading) {
     return <main style={{ padding: 24 }}>처리 중...</main>
@@ -61,5 +63,13 @@ export default function SuccessPage() {
       <button onClick={() => router.push('/')}
         style={{ marginTop: 12, padding: '10px 14px', border: '1px solid #ddd', borderRadius: 8 }}>홈으로</button>
     </main>
+  )
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<main style={{ padding:24 }}>처리 중...</main>}>
+      <SuccessInner />
+    </Suspense>
   )
 }

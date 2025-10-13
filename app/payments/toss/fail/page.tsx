@@ -1,8 +1,12 @@
 'use client'
 
+import { Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 
-export default function FailPage() {
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+function FailInner() {
   const search = useSearchParams()
   const router = useRouter()
   const code = search.get('code')
@@ -16,5 +20,13 @@ export default function FailPage() {
       <button onClick={() => router.push('/checkout')}
         style={{ marginTop: 12, padding:'10px 14px', border:'1px solid #ddd', borderRadius:8 }}>다시 시도</button>
     </main>
+  )
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<main style={{ padding:24 }}>불러오는 중...</main>}>
+      <FailInner />
+    </Suspense>
   )
 }
