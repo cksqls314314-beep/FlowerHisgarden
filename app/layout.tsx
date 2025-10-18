@@ -1,22 +1,23 @@
+import './globals.css';
+import Link from 'next/link';
+
 export const metadata = {
-  title: "His Garden & Commons Club",
-  description: "His Garden & Commons Club — 중고서점 재고 조회",
+  title: 'HGCC Online Shop',
+  description: 'His Garden & Commons Club – Online Used Books',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko">
-      <body style={{ fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji" }}>
-        <div style={{ maxWidth: 980, margin: "0 auto", padding: "24px" }}>
-          <header style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
-            <img src="/logo.svg" alt="logo" width={36} height={36} />
-            <h1 style={{ margin: 0, fontSize: 22 }}>His Garden & Commons Club</h1>
-          </header>
-          {children}
-          <footer style={{ marginTop: 48, fontSize: 12, color: "#666" }}>
-            <div>© HGCC</div>
-          </footer>
-        </div>
+      <body className="min-h-screen bg-stone-50 text-stone-900">
+        <header className="border-b bg-white">
+          <nav className="mx-auto max-w-5xl px-4 h-14 flex items-center gap-6">
+            <Link href="/" className="font-semibold">HGCC</Link>
+            <Link href="/cart" className="ml-auto">장바구니</Link>
+          </nav>
+        </header>
+        <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+        <footer className="mx-auto max-w-5xl px-4 py-10 text-sm text-stone-500">© HGCC</footer>
       </body>
     </html>
   );

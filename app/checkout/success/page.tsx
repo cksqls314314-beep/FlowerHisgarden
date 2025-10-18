@@ -1,65 +1,47 @@
-// app/checkout/success/page.tsx
 'use client';
 import { useEffect, useState } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { clearCart, loadCart } from '@/lib/cart';
 
-export default function SuccessPage() {
-  const sp = useSearchParams();
-  const router = useRouter();
-  const [status, setStatus] = useState<'idle'|'confirming'|'recording'|'done'|'error'>('idle');
-  const [msg, setMsg] = useState<string>('결제 승인 중...');
+export default function SuccessPage({ searchParams }: { searchParams: { paymentKey?: string; orderId?: string; amount?: string } }){
+  const { paymentKey, orderId, amount } = searchParams;
+  const [status, setStatus] = useState<'idle'|'confirming'|'done'|'error'>('idle');
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
-    const paymentKey = sp.get('paymentKey');
-    const orderId = sp.get('orderId');
-    const amount = sp.get('amount');
-
-    if (!paymentKey || !orderId || !amount) {
-      setStatus('error');
-      setMsg('필수 파라미터 누락(paymentKey/orderId/amount)');
-      return;
-    }
-
     (async () => {
+      if (!paymentKey || !orderId || !amount) return;
+      setStatus('confirming');
       try {
-        setStatus('confirming');
-        setMsg('토스 결제 승인 중...');
-        const confirmRes = await fetch('/api/payments/confirm', {
+        // 1) Toss 서버 검증
+        const confirm = await fetch('/api/payments/confirm', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ paymentKey, orderId, amount: Number(amount) }),
-        });
-        const confirmData = await confirmRes.json();
-        if (!confirmRes.ok) throw new Error(confirmData?.message || '결제 승인 실패');
+          body: JSON.stringify({ paymentKey, orderId, amount: Number(amount) })
+        }).then(r => r.json());
+        if (!confirm.ok) throw new Error(confirm.message || '결제 검증 실패');
 
-        setStatus('recording');
-        setMsg('주문 기록 및 재고 차감 중...');
+        // 2) 판매 기록 + 재고 차감 (Apps Script)
+        const lineItems = loadCart().map(it => ({ isbn: it.isbn, qty: it.qty }));
+        const record = await fetch('/api/orders/record', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId, amount: Number(amount), lineItems })
+        }).then(r => r.json());
+        if (!record.ok) throw new Error(record.message || '재고 차감 실패');
 
-        // lineItems는 실제 앱에서 서버 계산값으로 가져오도록 설계하세요.
-        const lineItems = confirmData?.lineItems || []; // 기본은 빈 배열
-
-        const recordRes = await fetch('/api/orders/complete', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ orderId, amount: Number(amount), lineItems }),
-        });
-        const recordData = await recordRes.json();
-        if (!recordRes.ok) throw new Error(recordData?.message || '시트 기록 실패');
-
+        clearCart();
         setStatus('done');
-        setMsg('완료! 주문 상세로 이동합니다.');
-        router.replace(`/order/${orderId}`);
-      } catch (e: any) {
+        setMessage('결제가 완료되었습니다. 감사합니다!');
+      } catch (e:any) {
         setStatus('error');
-        setMsg(e?.message || '처리 중 오류');
+        setMessage(e.message);
       }
     })();
-  }, [sp, router]);
+  }, [paymentKey, orderId, amount]);
 
   return (
-    <main className="max-w-xl mx-auto p-6 space-y-4">
-      <h1 className="text-2xl font-semibold">결제 성공</h1>
-      <p className="text-gray-700">{msg}</p>
-    </main>
+    <div className="space-y-4">
+      <h1 className="text-2xl font-semibold">결제 결과</h1>
+      <div>{status === 'confirming' ? '검증 중...' : message}</div>
+    </div>
   );
 }
